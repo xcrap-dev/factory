@@ -1,7 +1,7 @@
 {
   "name": "@xcrap/factory",
   "version": "0.0.4",
-  "description": "Xcrap Factory is a set of utilities for dynamically creating instances of clients, extractors, and parsing models, making it easier to configure and extend scraping and parsing pipelines.",
+  "description": "Xcrap Factory is a set of utilities for dynamically creating instances of clients, extractors, and extraction models, making it easier to configure and extend scraping and extraction pipelines.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,8 +26,8 @@
     "@types/node": "^24.0.1",
     "@xcrap/axios-client": "^0.0.8",
     "@xcrap/core": "^0.0.10",
+    "@xcrap/extractor": "^0.3.2",
     "@xcrap/got-scraping-client": "^0.0.5",
-    "@xcrap/parser": "^0.0.4",
     "@xcrap/puppeteer-client": "^0.0.4",
     "@xcrap/puppeteer-extra-client": "^0.0.2",
     "jest": "^30.0.0",

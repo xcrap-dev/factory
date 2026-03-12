@@ -22,12 +22,39 @@ describe("createExtractor", () => {
         ).toThrow("'notAllowed' is not a allowed extractor!")
     })
 
-    it("should support custom argument separator", () => {
+    it("should return the extractor function for a simple key", () => {
         const extractor = createExtractor({
-            extractorText: "extractorB|foo|bar",
-            config: { allowedExtractors, argumentSeparator: "|" }
+            extractorText: "extractorA",
+            config: { allowedExtractors }
         })
 
-        expect(extractor).toBeDefined()
+        expect(extractor).toBe(mockExtractorA)
+        expect(extractor({} as any)).toBe("A")
+    })
+
+    it("should return an extractor with arguments using the default separator", () => {
+        const extractor = createExtractor({
+            extractorText: "extractorB:foo:bar",
+            config: {
+                allowedExtractors,
+                argumentSeparator: ":"
+            }
+        })
+
+        expect(extractor({} as any)).toBe("B")
+        expect(mockExtractorB).toHaveBeenCalledWith("foo", "bar")
+    })
+
+    it("should support custom argument separator and pass multiple arguments", () => {
+        const extractor = createExtractor({
+            extractorText: "extractorB|val1|val2",
+            config: {
+                allowedExtractors,
+                argumentSeparator: "|"
+            }
+        })
+
+        expect(extractor({} as any)).toBe("B")
+        expect(mockExtractorB).toHaveBeenCalledWith("val1", "val2")
     })
 })

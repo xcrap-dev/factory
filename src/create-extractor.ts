@@ -38,7 +38,7 @@ export function getExtractor({
     return extractor
 }
 
-function createExtractor(
+export function createExtractor(
     {
         extractorText,
         config: {

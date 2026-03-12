@@ -2,22 +2,29 @@ import { z } from "zod"
 
 import createExtractor from "./create-extractor"
 
-export type ParsingModelConstructor = new (options: any) => any
+export type ExtractionModelConstructor = new (options: any) => any
 
-const parsingModelSchema: z.ZodType<ParsingModel> = z.lazy(() =>
+const extractionModelSchema: z.ZodType<ExtractionModel> = z.lazy(() =>
     z.object({
         type: z.string(),
-        model: z.record(z.lazy(() => parsingModelFieldSchema)),
+        model: z.record(z.lazy(() => extractionModelFieldSchema)),
     })
 )
 
-const parsingModelFieldSchema: z.ZodType<ParsingModelField> = z.lazy(() =>
+const extractionModelFieldSchema: z.ZodType<ExtractionModelField> = z.lazy(() =>
     z.object({
-        query: z.string().optional(),
+        query: z.union([
+            z.string(),
+            z.object({
+                value: z.string(),
+                type: z.enum(["css", "xpath"]),
+            }),
+        ]).optional(),
         extractor: z.string().optional(),
         multiple: z.boolean().optional(),
         default: z.union([z.string(), z.number(), z.null()]).optional(),
-        nested: parsingModelSchema.optional(),
+        limit: z.number().optional(),
+        nested: extractionModelSchema.optional(),
     }).superRefine((field, ctx) => {
         if (field.nested && !field.query) {
             ctx.addIssue({
@@ -29,43 +36,44 @@ const parsingModelFieldSchema: z.ZodType<ParsingModelField> = z.lazy(() =>
     })
 )
 
-export type ParsingModelField = {
-    query?: string
+export type ExtractionModelField = {
+    query?: string | { value: string; type: "css" | "xpath" }
     extractor?: string
-    nested?: ParsingModel
+    nested?: ExtractionModel
     multiple?: boolean
+    limit?: number
     default?: string | number | null
 }
 
-export type ParsingModelFields = Record<string, ParsingModelField>
+export type ExtractionModelFields = Record<string, ExtractionModelField>
 
-export type ParsingModel = {
+export type ExtractionModel = {
     type: string
-    model: ParsingModelFields
+    model: ExtractionModelFields
 }
 
-export type CreateParsingModelConfig = {
+export type CreateExtractionModelConfig = {
     allowedExtractors: Record<string, Function>,
     extractorArgumentSeparator?: string
-    allowedModels: Record<string, ParsingModelConstructor>
+    allowedModels: Record<string, ExtractionModelConstructor>
 }
 
-export type CreateParsingModelOptions = {
-    model: ParsingModel
-    config: CreateParsingModelConfig
+export type CreateExtractionModelOptions = {
+    model: ExtractionModel
+    config: CreateExtractionModelConfig
 }
 
-function validateModelType(type: string, allowedModels: Record<string, ParsingModelConstructor>) {
+function validateModelType(type: string, allowedModels: Record<string, ExtractionModelConstructor>) {
     if (!(type in allowedModels)) {
         throw new Error(`Unsupported model type: "${type}"`)
     }
 }
 
-export function createParsingModel({
+export function createExtractionModel({
     config: { allowedExtractors, allowedModels, extractorArgumentSeparator },
     model: root,
-}: CreateParsingModelOptions) {
-    root = parsingModelSchema.parse(root)
+}: CreateExtractionModelOptions) {
+    root = extractionModelSchema.parse(root)
 
     const { type, model } = root
 
@@ -74,6 +82,7 @@ export function createParsingModel({
     const parsedModel: Record<string, any> = {}
 
     for (const [fieldName, field] of Object.entries(model)) {
+        const query = typeof field.query === "string" ? { value: field.query, type: "css" } : field.query
         const extractorText = field.extractor
 
         const extractor = extractorText ? createExtractor({
@@ -85,12 +94,13 @@ export function createParsingModel({
         }) : undefined
 
         parsedModel[fieldName] = {
-            ...(field.query && { query: field.query }),
+            ...(query && { query }),
             ...(extractor && { extractor }),
             ...(field.multiple && { multiple: true }),
+            ...(field.limit !== undefined && { limit: field.limit }),
             ...(field.default !== undefined && { default: field.default }),
             ...(field.nested && {
-                model: createParsingModel({
+                model: createExtractionModel({
                     model: field.nested,
                     config: {
                         allowedExtractors: allowedExtractors,
@@ -105,4 +115,4 @@ export function createParsingModel({
     return new allowedModels[type](parsedModel)
 }
 
-export default createParsingModel
+export default createExtractionModel

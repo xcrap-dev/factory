@@ -1,6 +1,6 @@
-# 🕷️ Xcrap Factory: Instantiate clients, parsing models, and extractors from configuration objects
+# 🕷️ Xcrap Factory: Instantiate clients, extraction models, and extractors from configuration objects
 
-Xcrap Factory is a set of utilities for dynamically creating instances of clients, extractors, and parsing models, making it easier to configure and extend scraping and parsing pipelines.
+Xcrap Factory is a set of utilities for dynamically creating instances of clients, extractors, and extraction models, making it easier to configure and extend scraping and extraction pipelines.
 
 ## 📦 Installation
 
@@ -14,7 +14,7 @@ npm i @xcrap/factory
 
 * **createClient**: Instantiates clients from a registry of allowed classes.
 * **createExtractor**: Creates extractor functions from configurable text and a registry of allowed extractors.
-* **createParsingModel**: Builds validated and nested parsing models with customizable extractors and types.
+* **createExtractionModel**: Builds validated and nested extraction models with customizable extractors and types.
 
 ## 🚀 Usage
 
@@ -61,22 +61,22 @@ const extractor = createExtractor({
 })
 ```
 
-### 3. Creating a Parsing Model
+### 3. Creating a Extraction Model
 
 ```typescript
-import { HtmlParsingModel, JsonParsingModel } from "@xcrap/parser"
-import { createParsingModel } from "@xcrap/factory"
+import { HtmlExtractionModel, JsonExtractionModel } from "@xcrap/parser"
+import { createExtractionModel } from "@xcrap/factory"
 
 const config = {
 	allowedExtractors: {...},
 	extractorArgumentSeparator: "...", // Optional
 	allowedModels: {
-		html: HtmlParsingModel,
-		json: JsonParsingModel
+		html: HtmlExtractionModel,
+		json: JsonExtractionModel
 	}
 }
 
-const parsingModel = createParsingModel({
+const extractionModel = createExtractionModel({
 	config: config,
 	model: {
 		type: "html", // Model type: html, json..
